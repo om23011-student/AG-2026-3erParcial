@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe 3D</title>
+    <!-- Estilos de la página principal -->
+    <style>
+        /* Estilos generales del documento (fondo, fuente, centrado) */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #menu-container {
+            background-color: #16213e;
+            padding: 2rem 4rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            color: #0f3460;
+            text-shadow: 1px 1px 2px #e94560;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: #e94560;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #0f3460;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(233, 69, 96, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #16213e;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .symbol-selection {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .symbol-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            background-color: #0f3460;
+            border: 2px solid #e94560;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        /* Hover sobre botones de X y O */
+        .symbol-btn:hover {
+            background-color: #e94560;
+            transform: scale(1.1);
+        }
+
+        /* --- Interfaz durante el juego (HUD) --- */
+        /* Contenedor que aloja los marcadores de jugadores, flota sobre el canvas */
+        #hud-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none; /* Que no bloquee el mouse del canvas */
+            z-index: 10;
+        }
+
+        /* Estilo base para cada marcador de jugador */
+        .player-info {
+            padding: 10px 20px;
+            background-color: rgba(22, 33, 62, 0.8);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        /* Clase aplicada dinámicamente cuando es el turno del jugador */
+        .turno-activo {
+            border-color: #e94560;
+            color: #e94560;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        /* Contenedor del juego (oculto por defecto al iniciar en el menú) */
+        #game-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* El área de renderizado de WebGL */
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Menú Principal: Donde el usuario selecciona el modo de juego -->
+    <div id="menu-container">
+        <h1>TIC TAC TOE 3D</h1>
+
+        <button class="btn" id="btn-1v1">Jugador vs Jugador</button>
+        <button class="btn" id="btn-pve">Jugador vs IA</button>
+        <button class="btn" id="btn-demo">Modo Demo (IA vs IA)</button>
+    </div>
+
+    <!-- Modal Selección de Símbolo (Modo PvE / Contra IA) -->
+    <div id="symbol-modal" class="modal">
+        <div class="modal-content">
+            <h2>Elige tu ficha</h2>
+            <div class="symbol-selection">
+                <button class="symbol-btn" id="btn-select-x">X</button>
+                <button class="symbol-btn" id="btn-select-o">O</button>
+            </div>
+            <br>
+            <button class="btn" id="btn-cancel-symbol" style="margin-top:20px; background-color:#666;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Selección de Símbolo (Modo 1v1) -->
+    <div id="symbol-1v1-modal" class="modal">
+        <div class="modal-content">
+            <h2>¿Con qué ficha jugará el Jugador 1?</h2>
+            <div class="symbol-selection">
+                <button class="symbol-btn" id="btn-1v1-select-x">X</button>
+                <button class="symbol-btn" id="btn-1v1-select-o">O</button>
+            </div>
+            <p style="margin-top: 15px; color: #aaa; font-size: 0.9rem;">El Jugador 2 usará la ficha restante.</p>
+            <br>
+            <button class="btn" id="btn-cancel-1v1-symbol" style="margin-top:20px; background-color:#666;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Fin del Juego: Muestra texto de victoria/empate -->
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="game-over-text"></h2>
+            <br>
+            <button class="btn" id="btn-volver-menu">Volver al Menú</button>
+        </div>
+    </div>
+
+    <!-- Canvas del Juego 3D: Contiene el HUD y renderizador de WebGL -->
+    <div id="game-container">
+
+        <!-- Interfaz superpuesta (HUD) para mostrar status de turnos -->
+        <div id="hud-container">
+            <div id="player1-info" class="player-info">Jugador 1 [X]</div>
+            <div id="player2-info" class="player-info">Jugador 2 [O]</div>
+        </div>
+
+        <!-- Render central -->
+        <canvas id="glcanvas"></canvas>
+    </div>
+
+    <!-- Enlazado del script principal (módulo) -->
+    <script type="module" src="../js/principal/app.js"></script>
+</body>
+</html>
