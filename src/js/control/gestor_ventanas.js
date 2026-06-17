@@ -89,6 +89,10 @@ export default class GestorVentanas {
         
         document.getElementById('btn-volver-menu').addEventListener('click', () => {
             this.mostrarMenu(); // Cambia de pantalla
+            this.gameOverModal = document.getElementById('game-over-modal');
+            if (this.gameOverModal) {
+                this.gameOverModal.style.display = 'none'; // Cierra la ventana emergente de victoria
+            }
             if(this.onReiniciar) this.onReiniciar(); // Avisa a app.js que detenga sus lógicas/bots
         });
     }
