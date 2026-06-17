@@ -126,67 +126,6 @@ export default class AlgoritmoElipse {
         return puntos;
     }
 
-
-    /**
-     * Genera los vértices (x, y, z) de un círculo usando el algoritmo de Bresenham.
-     * @param {number} cx - Coordenada X del centro (ej. -1.0 a 1.0)
-     * @param {number} cy - Coordenada Y del centro
-     * @param {number} radio - Radio del círculo
-     * @returns {Array} - Arreglo unidimensional con los datos de los vértices [x1, y1, z1, x2, y2, z2, ...]
-     */
-    circuloBresenham(cx, cy, radio) {
-        const puntos = [];
-        const scale = 100; 
-
-        // Convertimos a enteros para el algoritmo
-        const cx0 = Math.round(cx * scale);
-        const cy0 = Math.round(cy * scale);
-        const r = Math.round(radio * scale);
-
-        // Caso base: círculo sin radio
-        if (r <= 0) {
-            puntos.push(cx, cy, 0.0);
-            return puntos;
-        }
-
-        // Función interna para devolver las coordenadas a la escala WebGL y añadir Z = 0.0
-        const plot = (px, py) => {
-            puntos.push(px / scale, py / scale, 0.0); 
-        };
-
-        // Simetría de 8 octantes
-        const plotOctantes = (x, y) => {
-            plot(cx0 + x, cy0 + y);
-            plot(cx0 - x, cy0 + y);
-            plot(cx0 + x, cy0 - y);
-            plot(cx0 - x, cy0 - y);
-            plot(cx0 + y, cy0 + x);
-            plot(cx0 - y, cy0 + x);
-            plot(cx0 + y, cy0 - x);
-            plot(cx0 - y, cy0 - x);
-        };
-
-        // Valores iniciales
-        let x = 0;
-        let y = r;
-        let d = 3 - 2 * r;
-
-        plotOctantes(x, y);
-
-        // Ciclo principal
-        while (x < y) {
-            x++;
-            if (d > 0) {
-                y--;
-                d += 4 * (x - y) + 10;
-            } else {
-                d += 4 * x + 6;
-            }
-            plotOctantes(x, y);
-        }
-
-        return puntos;
-    }
 }
 
 
