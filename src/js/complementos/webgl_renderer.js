@@ -57,9 +57,9 @@ export default class WebGLRenderer {
 
     /**
      * @param {number[]} vertices Arreglo de coordenadas [x, y, z, ...]
-     * @param {boolean} isDynamic true si los vértices cambian en cada frame, false si son estáticos
+     * @param {boolean} esDinamico true si los vértices cambian en cada frame, false si son estáticos
      */
-    dibujar(vertices, isDynamic = true, mode = this.gl.POINTS) {
+    dibujar(vertices, esDinamico = true, modo = this.gl.POINTS) {
         if (!vertices || vertices.length === 0) return;
 
         this.gl.useProgram(this.program);
@@ -74,14 +74,14 @@ export default class WebGLRenderer {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
         
         // Usamos DYNAMIC_DRAW o STATIC_DRAW según lo que necesites
-        const drawType = isDynamic ? this.gl.DYNAMIC_DRAW : this.gl.STATIC_DRAW;
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), drawType);
+        const tipoDibujo = esDinamico ? this.gl.DYNAMIC_DRAW : this.gl.STATIC_DRAW;
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), tipoDibujo);
 
         // 3. Usamos la locación que ya guardamos en el constructor
         this.gl.vertexAttribPointer(this.coordLocation, 3, this.gl.FLOAT, false, 0, 0);
         this.gl.enableVertexAttribArray(this.coordLocation);
 
         // 4. Dibujar
-        this.gl.drawArrays(mode, 0, vertices.length / 3);
+        this.gl.drawArrays(modo, 0, vertices.length / 3);
     }
 }

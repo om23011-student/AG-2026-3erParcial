@@ -70,11 +70,11 @@ export default class AlgoritmoElipse {
     }
 
     
-    calcularCirculo(xc, yc, r, octants = [0, 1, 2, 3, 4, 5, 6, 7], resolucion = 100) {
+    calcularCirculo(xc, yc, r, octantes = [0, 1, 2, 3, 4, 5, 6, 7], resolucion = 100) {
         const puntos = [];
 
         // Validaciones iniciales
-        if (r < 0 || octants.length > 8) {
+        if (r < 0 || octantes.length > 8) {
             return puntos;
         }
 
@@ -96,7 +96,7 @@ export default class AlgoritmoElipse {
         // 2. Función interna para devolver puntos a flotantes WebGL 
         // e iterar sobre los octantes seleccionados
         const agregarOctantes = (px, py) => {
-            for (let oct of octants) {
+            for (let oct of octantes) {
                 switch (oct) {
                     case 0: puntos.push((xcInt + px) / resolucion, (ycInt - py) / resolucion, 0.0); break;
                     case 1: puntos.push((xcInt + py) / resolucion, (ycInt - px) / resolucion, 0.0); break;
@@ -127,5 +127,3 @@ export default class AlgoritmoElipse {
     }
 
 }
-
-

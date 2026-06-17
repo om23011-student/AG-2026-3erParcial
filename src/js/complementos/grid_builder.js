@@ -34,8 +34,8 @@ export default class GridBuilder {
     // Utilidad extra: Nos devuelve el tamaño exacto de las celdas
     calcularDimensionesCelda(filas, columnas) {
         return {
-            cellWidth: (this.xMax - this.xMin) / columnas,
-            cellHeight: (this.yMax - this.yMin) / filas
+            anchoCelda: (this.xMax - this.xMin) / columnas,
+            altoCelda: (this.yMax - this.yMin) / filas
         };
     }
 }
