@@ -10,7 +10,10 @@ export const EJES = {
   AMBOS: 2,
 };
 
-export default class transformacion {
+/**
+ * Clase para realizar transformaciones a un arreglo plano de coordenadas.
+ */
+export default class Transformacion {
   /**
    * Aplica una matriz de transformación a un arreglo de coordenadas.
    *
