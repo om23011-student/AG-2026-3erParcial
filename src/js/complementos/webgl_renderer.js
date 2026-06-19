@@ -51,6 +51,10 @@ export default class WebGLRenderer {
         this.color = [r, g, b, a];
     }
 
+    setClearColor(r, g, b, a = 1.0) {
+        this.gl.clearColor(r, g, b, a);
+    }
+
     limpiar() {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }

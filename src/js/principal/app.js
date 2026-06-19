@@ -23,6 +23,7 @@ const ventanas = new GestorVentanas({
 
 // Canvas GL
 const canvas = document.getElementById('glcanvas');
+let animacionId = null;
 
 function initWebGL() {
     canvas.width = window.innerWidth;
@@ -35,8 +36,9 @@ function initWebGL() {
     }
 
     renderer = new WebGLRenderer(gl);
+    // Asignar un color de fondo gris oscuro para que el canvas se note
+    renderer.setClearColor(0.15, 0.15, 0.18, 1.0); 
     renderer.limpiar();
-    // Aquí puedes iniciar tu GridBuilder y renderizar el tablero vacío 3D
 }
 
 function arrancarPartida(config) {
@@ -59,6 +61,14 @@ function arrancarPartida(config) {
         renderer.limpiar();
     }
 
+    // Cancelar cualquier bucle de renderizado zombi anterior
+    if (animacionId) {
+        cancelAnimationFrame(animacionId);
+    }
+    
+    // Iniciar el bucle de renderizado único
+    renderizarEscena();
+
     // Comprobar flujos autónomos (IA)
     if (config.modo === 'demo') {
         cicloDemo();
@@ -71,6 +81,35 @@ function arrancarPartida(config) {
 function detenerPartida() {
     juegoActivo = false;
     configuracionActual = null;
+    
+    // Matar el bucle de renderizado
+    if (animacionId) {
+        cancelAnimationFrame(animacionId);
+        animacionId = null;
+    }
+    
+    // Limpiar el canvas si existe el renderer
+    if (renderer) {
+        renderer.limpiar();
+    }
+}
+
+// ----------------------------------------
+// Lógica de Renderizado Principal
+// ----------------------------------------
+
+function renderizarEscena() {
+    if (!juegoActivo || !renderer) return;
+
+    renderer.limpiar();
+
+    // AQUÍ VA TU LÓGICA DE DIBUJO WEBGL
+    // function drawBackground()...
+    // function drawGrid()...
+    // function drawPieces()...
+
+    // Continuar el bucle recursivo amarrándolo a la velocidad del monitor (60 FPS)
+    animacionId = requestAnimationFrame(renderizarEscena);
 }
 
 // ----------------------------------------
@@ -120,4 +159,3 @@ function ejecutarJugada(nivel, fila, columna) {
         }
     }
 }
-
