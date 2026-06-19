@@ -122,6 +122,6 @@ export default class GestorVentanas {
 
     mostrarJuego() {
         this.menuContainer.style.display = 'none';
-        this.gameContainer.style.display = 'block';
+        this.gameContainer.style.display = 'flex';
     }
 }
