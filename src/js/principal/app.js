@@ -1,8 +1,17 @@
 import TresEnRaya3D from '../mecanismos/detector_de_ganador.js';
 import MotorIA3D from '../mecanismos/motor_ia_3d.js';
-import WebGLRenderer from '../complementos/webgl_renderer.js';
 import GestorVentanas from '../control/gestor_ventanas.js';
 import GestorInterfaz from '../control/gestor_interfaz.js';
+// ----------------------------------------
+//importaciones de algoritmos de dibujo
+// ----------------------------------------
+import WebGLRenderer from '../complements/webgl_renderer.js'; 
+import LineaDDA from '../complements/algoritmo_dda.js'; 
+import LineaBresenham from '../complements/algoritmo_bresenham.js'; 
+import DibujarArcos from '../complements/algoritmo_arcos.js'; 
+
+  
+
 
 // Estado global de la partida
 let configuracionActual = null;
@@ -35,8 +44,21 @@ function initWebGL() {
     }
 
     renderer = new WebGLRenderer(gl);
-    renderer.limpiar();
     // Aquí puedes iniciar tu GridBuilder y renderizar el tablero vacío 3D
+    // Configuramos el color de los puntos (R, G, B, A). Vamos a pintarlos de rojo. 
+
+    renderer.setColor(1.0, 0.0, 0.0, 1.0); 
+    const puntosDeLinea = generadorLineas.calcularDDA(-0.8, -0.8, 0.8, 0.8); 
+    renderer.limpiar(); 
+    renderer.dibujar(puntosDeLinea, false); 
+
+  
+
+// 3. Calculamos los puntos de la línea usando DDA 
+
+const generadorLineas = new LineaDDA(); 
+
+
 }
 
 function arrancarPartida(config) {
@@ -120,4 +142,3 @@ function ejecutarJugada(nivel, fila, columna) {
         }
     }
 }
-
