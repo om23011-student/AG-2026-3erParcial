@@ -1,22 +1,23 @@
 import TresEnRaya3D from '../mecanismos/detector_de_ganador.js';
 import MotorIA3D from '../mecanismos/motor_ia_3d.js';
+import WebGLRenderer from '../complementos/webgl_renderer.js';
 import GestorVentanas from '../control/gestor_ventanas.js';
 import GestorInterfaz from '../control/gestor_interfaz.js';
-// ----------------------------------------
-//importaciones de algoritmos de dibujo
-// ----------------------------------------
-import WebGLRenderer from '../complements/webgl_renderer.js'; 
-import LineaDDA from '../complements/algoritmo_dda.js'; 
-import LineaBresenham from '../complements/algoritmo_bresenham.js'; 
-import DibujarArcos from '../complements/algoritmo_arcos.js'; 
 
-  
+// 1. Importamos la clase de dibujo
+import LineaDDA from '../complementos/algoritmo_dda.js';
+import transformaciones from '../complementos/algoritmo_transformacion.js';
 
+// 2. Instanciamos el generador
+const generadorLineas = new LineaDDA();
+const transformacion = new transformaciones();
 
 // Estado global de la partida
 let configuracionActual = null;
 let simboloActual = true; // Empieza X
 let juegoActivo = false;
+let puntosDeLineaActual = null; // 3. Variable para guardar los puntos calculados
+let transformacionLinea = null; // <-- CORRECCIÓN: Variable declarada globalmente
 
 // Componentes Lógicos
 const detectorGanador = new TresEnRaya3D();
@@ -32,6 +33,7 @@ const ventanas = new GestorVentanas({
 
 // Canvas GL
 const canvas = document.getElementById('glcanvas');
+let animacionId = null;
 
 function initWebGL() {
     canvas.width = window.innerWidth;
@@ -43,22 +45,21 @@ function initWebGL() {
         return;
     }
 
+    // Aseguramos que WebGL renderice en todo el canvas
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
     renderer = new WebGLRenderer(gl);
-    // Aquí puedes iniciar tu GridBuilder y renderizar el tablero vacío 3D
-    // Configuramos el color de los puntos (R, G, B, A). Vamos a pintarlos de rojo. 
+    
+    // Usamos el gl nativo para el color de fondo para evitar errores
+    gl.clearColor(0.15, 0.15, 0.18, 1.0); 
+    renderer.limpiar();
 
-    renderer.setColor(1.0, 0.0, 0.0, 1.0); 
-    const puntosDeLinea = generadorLineas.calcularDDA(-0.8, -0.8, 0.8, 0.8); 
-    renderer.limpiar(); 
-    renderer.dibujar(puntosDeLinea, false); 
-
-  
-
-// 3. Calculamos los puntos de la línea usando DDA 
-
-const generadorLineas = new LineaDDA(); 
-
-
+    // 4. Asignamos un color rojo para que contraste y calculamos la línea
+    renderer.setColor(1.0, 0.0, 0.0, 1.0);
+    puntosDeLineaActual = generadorLineas.calcularDDA(-0.8, -0.8, -0.8, 0.8);
+    
+    // CORRECCIÓN: Uso de la variable ya declarada (y corrección de typo)
+    transformacionLinea = transformacion.rotacion(puntosDeLineaActual, 0.5); 
 }
 
 function arrancarPartida(config) {
@@ -81,6 +82,14 @@ function arrancarPartida(config) {
         renderer.limpiar();
     }
 
+    // Cancelar cualquier bucle de renderizado zombi anterior
+    if (animacionId) {
+        cancelAnimationFrame(animacionId);
+    }
+    
+    // Iniciar el bucle de renderizado único
+    renderizarEscena();
+
     // Comprobar flujos autónomos (IA)
     if (config.modo === 'demo') {
         cicloDemo();
@@ -93,6 +102,36 @@ function arrancarPartida(config) {
 function detenerPartida() {
     juegoActivo = false;
     configuracionActual = null;
+    
+    // Matar el bucle de renderizado
+    if (animacionId) {
+        cancelAnimationFrame(animacionId);
+        animacionId = null;
+    }
+    
+    // Limpiar el canvas si existe el renderer
+    if (renderer) {
+        renderer.limpiar();
+    }
+}
+
+// ----------------------------------------
+// Lógica de Renderizado Principal
+// ----------------------------------------
+
+function renderizarEscena() {
+    if (!juegoActivo || !renderer) return;
+
+    renderer.limpiar();
+
+    // 5. Dibujamos la línea si los puntos existen en cada ciclo
+    // CORRECCIÓN: Validación con el nombre correcto
+    if (transformacionLinea) { 
+        renderer.dibujar(transformacionLinea, false, renderer.gl.POINTS);
+    }
+
+    // Continuar el bucle recursivo amarrándolo a la velocidad del monitor (60 FPS)
+    animacionId = requestAnimationFrame(renderizarEscena);
 }
 
 // ----------------------------------------

@@ -44,10 +44,11 @@ export default class Transformacion {
    * @param {Array<number>} coords Arreglo plano de coordenadas.
    * @param {number} factor Factor de escalado simetrico.
    *
-   * @returns {Array<number>} Nuevo arreglo de coordenadas escaladas o arreglo vacio si no es posible la transformacion.
+   * @returns {Array<number>} Nuevo arreglo de coordenadas escaladas o vacio.
    */
   escalado(coords, factor) {
-    if (array.length === 0 || factor === 0) {
+    // CORRECCIÓN: coords en lugar de array
+    if (coords.length === 0 || factor === 0) {
       return [];
     }
 
@@ -56,7 +57,8 @@ export default class Transformacion {
       [0, factor],
     ];
 
-    return aplicarTransformacion(coords, matrizTransformacion);
+    // CORRECCIÓN: agregado el this.
+    return this.aplicarTransformacion(coords, matrizTransformacion);
   }
 
   /**
@@ -64,13 +66,14 @@ export default class Transformacion {
    *
    * @param {Array<number>} coords Arreglo plano de coordenadas.
    * @param {number} angulo Angulo de cizalladura en radianes (no debe ser π/2 ni 3π/2).
-   * @returns {Array<number>} Nuevo arreglo de coordenadas o arreglo vacio si no es posible la transformacion.
+   * @returns {Array<number>} Nuevo arreglo de coordenadas o vacio.
    */
   cizalladura(coords, angulo) {
+    // CORRECCIÓN: coords en lugar de array y arreglada lógica del ===
     if (
-      array.length === 0 ||
+      coords.length === 0 ||
       Math.abs(angulo) === Math.PI / 2 ||
-      Math.abs(angulo) !== (3 * Math.PI) / 2
+      Math.abs(angulo) === (3 * Math.PI) / 2
     ) {
       return [];
     }
@@ -80,44 +83,47 @@ export default class Transformacion {
       [0, 1],
     ];
 
-    return aplicarTransformacion(coords, matrizTransformacion);
+    // CORRECCIÓN: agregado el this.
+    return this.aplicarTransformacion(coords, matrizTransformacion);
   }
 
   /**
    * Transforma un arreglo de coordenadas aplicando una reflexion.
    *
    * @param {Array<number>} coords Arreglo plano de coordenadas.
-   * @param {string} eje Eje de reflexion.
+   * @param {number} eje Eje de reflexion.
    *
-   * @returns {Array<number>} Nuevo arreglo de coordenadas reflejadas o arreglo vacio si no es posible la transformacion.
+   * @returns {Array<number>} Nuevo arreglo de coordenadas reflejadas o vacio.
    */
   espejo(coords, eje) {
-    if (coords.length === 0 || eje === null) {
+    if (coords.length === 0 || eje === null || eje === undefined) {
       return [];
     }
 
     let matrizTransformacion;
 
-    if ((eje = this.IZQ)) {
+    // CORRECCIÓN: === en lugar de =, uso de EJES y corrección de matrices
+    if (eje === EJES.IZQ) {
       matrizTransformacion = [
         [-1, 0],
-        [0, -1],
+        [0, 1],
       ];
-    } else if ((eje = this.DER)) {
+    } else if (eje === EJES.DER) {
       matrizTransformacion = [
         [1, 0],
         [0, -1],
       ];
-    } else if ((eje = this.AMBOS)) {
+    } else if (eje === EJES.AMBOS) {
       matrizTransformacion = [
         [-1, 0],
-        [0, 1],
+        [-0, -1],
       ];
     } else {
       return [];
     }
 
-    return aplicarTransformacion(coords, matrizTransformacion);
+    // CORRECCIÓN: agregado el this.
+    return this.aplicarTransformacion(coords, matrizTransformacion);
   }
 
   /**
@@ -126,7 +132,7 @@ export default class Transformacion {
    * @param {Array<number>} coords Arreglo plano de coordenadas.
    * @param {number} angulo Angulo de rotacion en radianes.
    *
-   * @returns {Array<number>} Nuevo arreglo de coordenadas rotadas o arreglo vacio si no es posible la transformacion.
+   * @returns {Array<number>} Nuevo arreglo de coordenadas rotadas o vacio.
    */
   rotacion(coords, angulo) {
     const cos = Math.cos(angulo);
@@ -137,6 +143,7 @@ export default class Transformacion {
       [sin, cos],
     ];
 
-    return aplicarTransformacion(coords, matrizTransformacion);
+    // CORRECCIÓN: agregado el this.
+    return this.aplicarTransformacion(coords, matrizTransformacion);
   }
 }
