@@ -4,10 +4,17 @@ import WebGLRenderer from '../complementos/webgl_renderer.js';
 import GestorVentanas from '../control/gestor_ventanas.js';
 import GestorInterfaz from '../control/gestor_interfaz.js';
 
+// 1. Importamos la clase de dibujo
+import LineaDDA from '../complementos/algoritmo_dda.js';
+
+// 2. Instanciamos el generador
+const generadorLineas = new LineaDDA();
+
 // Estado global de la partida
 let configuracionActual = null;
 let simboloActual = true; // Empieza X
 let juegoActivo = false;
+let puntosDeLineaActual = null; // 3. Variable para guardar los puntos calculados
 
 // Componentes Lógicos
 const detectorGanador = new TresEnRaya3D();
@@ -35,10 +42,18 @@ function initWebGL() {
         return;
     }
 
+    // Aseguramos que WebGL renderice en todo el canvas
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
     renderer = new WebGLRenderer(gl);
-    // Asignar un color de fondo gris oscuro para que el canvas se note
-    renderer.setClearColor(0.15, 0.15, 0.18, 1.0); 
+    
+    // Usamos el gl nativo para el color de fondo para evitar errores
+    gl.clearColor(0.15, 0.15, 0.18, 1.0); 
     renderer.limpiar();
+
+    // 4. Asignamos un color rojo para que contraste y calculamos la línea
+    renderer.setColor(1.0, 0.0, 0.0, 1.0);
+    puntosDeLineaActual = generadorLineas.calcularDDA(-0.8, -0.8, 0.8, 0.8);
 }
 
 function arrancarPartida(config) {
@@ -103,10 +118,10 @@ function renderizarEscena() {
 
     renderer.limpiar();
 
-    // AQUÍ VA TU LÓGICA DE DIBUJO WEBGL
-    // function drawBackground()...
-    // function drawGrid()...
-    // function drawPieces()...
+    // 5. Dibujamos la línea si los puntos existen en cada ciclo
+    if (puntosDeLineaActual) {
+        renderer.dibujar(puntosDeLineaActual, false, renderer.gl.POINTS);
+    }
 
     // Continuar el bucle recursivo amarrándolo a la velocidad del monitor (60 FPS)
     animacionId = requestAnimationFrame(renderizarEscena);
