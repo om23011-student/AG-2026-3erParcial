@@ -25,14 +25,17 @@ export default class Transformacion {
   aplicarTransformacion(coords, matriz) {
     const resultado = [];
 
-    for (let i = 0; i < coords.length; i += 2) {
+    // CORRECCIÓN MAGISTRAL: Saltamos de 3 en 3 para leer [X, Y, Z]
+    for (let i = 0; i < coords.length; i += 3) {
       const x = coords[i];
       const y = coords[i + 1];
+      const z = coords[i + 2]; // Guardamos la Z intacta
 
       const nuevoX = matriz[0][0] * x + matriz[0][1] * y;
       const nuevoY = matriz[1][0] * x + matriz[1][1] * y;
 
-      resultado.push(nuevoX, nuevoY);
+      // Devolvemos el punto nuevamente en formato 3D
+      resultado.push(nuevoX, nuevoY, z);
     }
 
     return resultado;
@@ -145,5 +148,112 @@ export default class Transformacion {
 
     // CORRECCIÓN: agregado el this.
     return this.aplicarTransformacion(coords, matrizTransformacion);
+  }
+
+  /**
+   * Transforma un arreglo de coordenadas aplicando la división de perspectiva (W).
+   * * @param {Array<number>} coords Arreglo plano de coordenadas [X, Y, Z...].
+   * @param {number} distanciaFocal Qué tan rápido crece W. (Ej: 0.5 a 1.5).
+   *
+   * @returns {Array<number>} Nuevo arreglo con el efecto de profundidad.
+   */
+  puntoFuga(coords, distanciaFocal) {
+    if (coords.length === 0 || distanciaFocal === 0) {
+      return [...coords];
+    }
+
+    const resultado = [];
+
+    // Recorremos de 3 en 3 leyendo [X, Y, Z]
+    for (let i = 0; i < coords.length; i += 3) {
+      const x = coords[i];
+      const y = coords[i + 1];
+      const z = coords[i + 2];
+
+      // 1. CALCULAMOS 'W'
+      // Como nuestro tablero es 2.5D, usamos 'Y' (lo que está más arriba en pantalla)
+      // para simular la lejanía en profundidad.
+      // Si el punto está abajo (Y negativo), W será más pequeño (Near).
+      // Si el punto está arriba (Y positivo), W será más grande (Far).
+      let w = 1 + (y * distanciaFocal); // Ajustamos la velocidad de cambio con distanciaFocal
+
+      // Evitamos que W se vuelva cero o negativo para que la cámara no se "voltee" o explote
+      if (w <= 0.1) {
+          w = 0.1; 
+      }
+
+      // 2. DIVISIÓN DE PERSPECTIVA (La matemática de tu clase)
+      const nuevoX = x / w;
+      const nuevoY = y / w; 
+      // Nota: Si usáramos Z real, aquí también haríamos z / w
+
+      resultado.push(nuevoX, nuevoY, z);
+    }
+
+    return resultado;
+  }
+
+  /**
+   * Traslada (mueve) las coordenadas en los ejes X, Y y Z.
+   *
+   * @param {Array<number>} coords Arreglo plano de coordenadas [X, Y, Z...].
+   * @param {number} tx Desplazamiento en X (positivo=derecha, negativo=izquierda).
+   * @param {number} ty Desplazamiento en Y (positivo=arriba, negativo=abajo).
+   * @param {number} tz Desplazamiento en Z (profundidad: positivo=cerca, negativo=lejos).
+   *
+   * @returns {Array<number>} Nuevo arreglo de coordenadas trasladadas.
+   */
+  translacion(coords, tx, ty, tz) {
+    if (coords.length === 0) {
+      return [];
+    }
+
+    const resultado = [];
+
+    // Recorremos de 3 en 3 leyendo [X, Y, Z]
+    for (let i = 0; i < coords.length; i += 3) {
+      const x = coords[i];
+      const y = coords[i + 1];
+      const z = coords[i + 2];
+
+      // Sumamos los desplazamientos a cada eje
+      resultado.push(x + tx, y + ty, z + tz);
+    }
+
+    return resultado;
+  }
+
+  /**
+   * Rota las coordenadas alrededor del eje X para "acostar" o "levantar" la figura.
+   *
+   * @param {Array<number>} coords Arreglo plano de coordenadas [X, Y, Z...].
+   * @param {number} angulo Angulo de rotación en radianes.
+   *
+   * @returns {Array<number>} Nuevo arreglo de coordenadas rotadas en X.
+   */
+  rotacionX(coords, angulo) {
+    if (coords.length === 0) {
+      return [];
+    }
+
+    const cos = Math.cos(angulo);
+    const sin = Math.sin(angulo);
+    const resultado = [];
+
+    // Recorremos de 3 en 3 leyendo [X, Y, Z]
+    for (let i = 0; i < coords.length; i += 3) {
+      const x = coords[i];
+      const y = coords[i + 1];
+      const z = coords[i + 2];
+
+      // En la rotación X, el eje X se queda intacto.
+      // Modificamos Y (altura) y Z (profundidad) para "acostar" los puntos.
+      const nuevoY = y * cos - z * sin;
+      const nuevoZ = y * sin + z * cos;
+
+      resultado.push(x, nuevoY, nuevoZ);
+    }
+
+    return resultado;
   }
 }

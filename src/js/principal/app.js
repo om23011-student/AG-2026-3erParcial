@@ -7,17 +7,21 @@ import GestorInterfaz from '../control/gestor_interfaz.js';
 // 1. Importamos la clase de dibujo
 import LineaDDA from '../complementos/algoritmo_dda.js';
 import transformaciones from '../complementos/algoritmo_transformacion.js';
+import ConstruirGrid from '../mecanismos/construir_grid.js';
 
 // 2. Instanciamos el generador
 const generadorLineas = new LineaDDA();
 const transformacion = new transformaciones();
+const constructorGrid = new ConstruirGrid();
+const tablero = constructorGrid.obtenerTablero(); // Obtenemos el tablero de 3x3
+const piso1 = transformacion.translacion(tablero, 0, -0.6, 0); // Movemos el tablero a la izquierda para centrarlo
+const piso2 = transformacion.translacion(tablero, 0, 0.6, 0); // Movemos el tablero hacia arriba para el segundo piso
+
 
 // Estado global de la partida
 let configuracionActual = null;
 let simboloActual = true; // Empieza X
 let juegoActivo = false;
-let puntosDeLineaActual = null; // 3. Variable para guardar los puntos calculados
-let transformacionLinea = null; // <-- CORRECCIÓN: Variable declarada globalmente
 
 // Componentes Lógicos
 const detectorGanador = new TresEnRaya3D();
@@ -51,15 +55,9 @@ function initWebGL() {
     renderer = new WebGLRenderer(gl);
     
     // Usamos el gl nativo para el color de fondo para evitar errores
-    gl.clearColor(0.15, 0.15, 0.18, 1.0); 
-    renderer.limpiar();
-
-    // 4. Asignamos un color rojo para que contraste y calculamos la línea
+    gl.clearColor(0.15, 0.15, 0.18, 1.0);
     renderer.setColor(1.0, 0.0, 0.0, 1.0);
-    puntosDeLineaActual = generadorLineas.calcularDDA(-0.8, -0.8, -0.8, 0.8);
-    
-    // CORRECCIÓN: Uso de la variable ya declarada (y corrección de typo)
-    transformacionLinea = transformacion.rotacion(puntosDeLineaActual, 0.5); 
+    renderer.limpiar(); 
 }
 
 function arrancarPartida(config) {
@@ -118,7 +116,6 @@ function detenerPartida() {
 // ----------------------------------------
 // Lógica de Renderizado Principal
 // ----------------------------------------
-
 function renderizarEscena() {
     if (!juegoActivo || !renderer) return;
 
@@ -126,8 +123,12 @@ function renderizarEscena() {
 
     // 5. Dibujamos la línea si los puntos existen en cada ciclo
     // CORRECCIÓN: Validación con el nombre correcto
-    if (transformacionLinea) { 
-        renderer.dibujar(transformacionLinea, false, renderer.gl.POINTS);
+    if (tablero) { 
+        renderer.limpiar();
+        renderer.dibujar(tablero, false, renderer.gl.POINTS);
+        renderer.dibujar(piso1, false, renderer.gl.POINTS);
+        renderer.dibujar(piso2, false, renderer.gl.POINTS);
+        decoracionTablero();
     }
 
     // Continuar el bucle recursivo amarrándolo a la velocidad del monitor (60 FPS)
@@ -180,4 +181,19 @@ function ejecutarJugada(nivel, fila, columna) {
             }
         }
     }
+}
+
+
+function decoracionTablero() {
+    const pilarIzquierdo = generadorLineas.calcularDDA(-0.74, -0.49, -0.74, 0.71);
+    const pilarDerecho = generadorLineas.calcularDDA(0.85, -0.72, 0.85, 0.47);
+    const pilarCentral = generadorLineas.calcularDDA(-0.16, 0.32, -0.16, -0.87);
+    const pilarTrasero1 = generadorLineas.calcularDDA(0.12, 0.37, 0.12, 0.21);
+    const pilarTrasero2 = generadorLineas.calcularDDA(0.12, -0.24, 0.12, -0.39);
+
+    renderer.dibujar(pilarIzquierdo, false, renderer.gl.POINTS);
+    renderer.dibujar(pilarDerecho, false, renderer.gl.POINTS);
+    renderer.dibujar(pilarCentral, false, renderer.gl.POINTS);
+    renderer.dibujar(pilarTrasero1, false, renderer.gl.POINTS);
+    renderer.dibujar(pilarTrasero2, false, renderer.gl.POINTS);
 }
