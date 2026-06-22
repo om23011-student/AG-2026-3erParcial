@@ -9,12 +9,39 @@ export default class ConstruirGrid {
 
     obtenerTablero() {
         const lineas = [];
-        // Construimos un tablero de 3x3 usando líneas horizontales y verticales
-        for (let i = -0.9; i <= 0.9; i += 0.6) {
-            // Líneas horizontales
-            lineas.push(...this.generadorLineas.calcularDDA(-0.9, i, 0.9, i));
-            // Líneas verticales
-            lineas.push(...this.generadorLineas.calcularDDA(i, -0.9, i, 0.9));
+        const casillas = [[],[],[]];
+
+        const min = -0.9;
+        const paso = 0.6;
+        
+        for (let fila = 0; fila < 3; fila++) {
+            for (let columna = 0; columna < 3; columna++) {
+
+                const x0 = min + columna * paso;
+                const x1 = x0 + paso;
+
+                const y0 = min + fila * paso;
+                const y1 = y0 + paso;
+
+                casillas[fila].push({ xMax: x1, yMax: y0, xMin: x0, yMin: y1 });
+
+                lineas.push(
+                    ...this.generadorLineas.calcularDDA(x0, y0, x1, y0)
+                );
+
+                lineas.push(
+                    ...this.generadorLineas.calcularDDA(x1, y0, x1, y1)
+                );
+
+                lineas.push(
+                    ...this.generadorLineas.calcularDDA(x1, y1, x0, y1)
+                );
+
+                lineas.push(
+                    ...this.generadorLineas.calcularDDA(x0, y1, x0, y0)
+                );
+
+            }
         }
         
         const tableroRotado = this.transformacion.rotacion(lineas, 60); // Rotamos el tablero para darle perspectiva
@@ -26,6 +53,6 @@ export default class ConstruirGrid {
         const radianesX = gradosInclinacion * (Math.PI / 180);
         const tableroFinal = this.transformacion.rotacionX(tableroConProfundidad, radianesX); // Proyectamos nuevamente para acentuar el efecto de profundidad
         
-        return tableroFinal; // Devolvemos el tablero transformado para que se dibuje con perspectiva y cizalladura
+        return { tablero: tableroFinal, casillas }; // Devolvemos el tablero transformado para que se dibuje con perspectiva y cizalladura
     }
 }

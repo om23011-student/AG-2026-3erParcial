@@ -13,10 +13,38 @@ import ConstruirGrid from '../mecanismos/construir_grid.js';
 const generadorLineas = new LineaDDA();
 const transformacion = new transformaciones();
 const constructorGrid = new ConstruirGrid();
-const tablero = constructorGrid.obtenerTablero(); // Obtenemos el tablero de 3x3
+const { tablero, casillas } = constructorGrid.obtenerTablero(); // Obtenemos el tablero de 3x3
 const piso1 = transformacion.translacion(tablero, 0, -0.6, 0); // Movemos el tablero a la izquierda para centrarlo
 const piso2 = transformacion.translacion(tablero, 0, 0.6, 0); // Movemos el tablero hacia arriba para el segundo piso
+const casillasNivel1 = transformacion.translacion(casillas, 0, -0.6, 0);
+const casillasNivel2 = transformacion.translacion(casillas, 0, 0.6, 0);
 
+function detectarCasilla (x, y) {
+    casillas.forEach((fila, filaIdx) => {
+        fila.forEach((casilla, columnaIdx) => {
+            if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
+                console.log("llego base");
+                ejecutarJugada(2, filaIdx, columnaIdx);
+            }
+        });
+    });
+    casillasNivel1.forEach((fila, filaIdx) => {
+        fila.forEach((casilla, columnaIdx) => {
+            if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
+                console.log("llego alto");
+                ejecutarJugada(1, filaIdx, columnaIdx);
+            }
+        });
+    });
+    casillasNivel2.forEach((fila, filaIdx) => {
+        fila.forEach((casilla, columnaIdx) => {
+            if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
+                console.log("llego bajo");
+                ejecutarJugada(3, filaIdx, columnaIdx);
+            }
+        });
+    });
+}
 
 // Estado global de la partida
 let configuracionActual = null;
@@ -38,6 +66,16 @@ const ventanas = new GestorVentanas({
 // Canvas GL
 const canvas = document.getElementById('glcanvas');
 let animacionId = null;
+
+canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = parseInt((e.clientX - rect.left) * (canvas.width / rect.width));
+    const y = parseInt((e.clientY - rect.top) * (canvas.height / rect.height));
+    const xNorm = (x / canvas.width) * 2 - 1; // Normalizamos a [-1, 1]
+    const yNorm = -((y / canvas.height) * 2 - 1); // Invertimos el eje Y para que coincida con WebGL
+    detectarCasilla(xNorm, yNorm);
+});
 
 function initWebGL() {
     canvas.width = window.innerWidth;
@@ -163,7 +201,8 @@ function ejecutarJugada(nivel, fila, columna) {
     // Intentar asentar el movimiento en el núcleo duro de evaluación
     if (detectorGanador.colocarFicha(nivel, fila, columna, simboloActual)) {
         // TODO: ACTUALIZAR RENDERIZADO AQUÍ CON WEBGL
-
+        console.log("ya va qudando");
+        
         // Verificar si la partida terminó tras la jugada
         const resultado = detectorGanador.verificarGanador();
 
@@ -183,17 +222,12 @@ function ejecutarJugada(nivel, fila, columna) {
     }
 }
 
-
 function decoracionTablero() {
-    const pilarIzquierdo = generadorLineas.calcularDDA(-0.74, -0.49, -0.74, 0.71);
-    const pilarDerecho = generadorLineas.calcularDDA(0.85, -0.72, 0.85, 0.47);
-    const pilarCentral = generadorLineas.calcularDDA(-0.16, 0.32, -0.16, -0.87);
-    const pilarTrasero1 = generadorLineas.calcularDDA(0.12, 0.37, 0.12, 0.21);
-    const pilarTrasero2 = generadorLineas.calcularDDA(0.12, -0.24, 0.12, -0.39);
-
-    renderer.dibujar(pilarIzquierdo, false, renderer.gl.POINTS);
-    renderer.dibujar(pilarDerecho, false, renderer.gl.POINTS);
-    renderer.dibujar(pilarCentral, false, renderer.gl.POINTS);
-    renderer.dibujar(pilarTrasero1, false, renderer.gl.POINTS);
-    renderer.dibujar(pilarTrasero2, false, renderer.gl.POINTS);
+    const decoracion = [];
+    decoracion.push(...generadorLineas.calcularDDA(-0.74, -0.49, -0.74, 0.71));
+    decoracion.push(...generadorLineas.calcularDDA(0.85, -0.72, 0.85, 0.47));
+    decoracion.push(...generadorLineas.calcularDDA(-0.16, 0.32, -0.16, -0.87));
+    decoracion.push(...generadorLineas.calcularDDA(0.12, 0.37, 0.12, 0.21));
+    decoracion.push(...generadorLineas.calcularDDA(0.12, -0.24, 0.12, -0.39));
+    renderer.dibujar(decoracion, false, renderer.gl.POINTS);
 }
