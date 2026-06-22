@@ -8,14 +8,20 @@ import GestorInterfaz from '../control/gestor_interfaz.js';
 import LineaDDA from '../complementos/algoritmo_dda.js';
 import transformaciones from '../complementos/algoritmo_transformacion.js';
 import ConstruirGrid from '../mecanismos/construir_grid.js';
+import transformacionesPiezas from "../mecanismos/transformacion_piezas.js"
 
 // 2. Instanciamos el generador
 const generadorLineas = new LineaDDA();
 const transformacion = new transformaciones();
 const constructorGrid = new ConstruirGrid();
+const transformarPieza = new transformacionesPiezas();
 const tablero = constructorGrid.obtenerTablero(); // Obtenemos el tablero de 3x3
+const tableroTransformado = transformarPieza.aplicarTransformaciones(tablero)
 const piso1 = transformacion.translacion(tablero, 0, -0.6, 0); // Movemos el tablero a la izquierda para centrarlo
 const piso2 = transformacion.translacion(tablero, 0, 0.6, 0); // Movemos el tablero hacia arriba para el segundo piso
+const centros = constructorGrid.obtenerCentros();
+const centrosPiso1 = transformacion.translacion(centros, 0, -0.6, 0); // Movemos el tablero a la izquierda para centrarlo
+const centrosPiso2 = transformacion.translacion(centros, 0, 0.6, 0); // Movemos el tablero hacia arriba para el segundo pisoc
 
 
 // Estado global de la partida
@@ -128,6 +134,11 @@ function renderizarEscena() {
         renderer.dibujar(tablero, false, renderer.gl.POINTS);
         renderer.dibujar(piso1, false, renderer.gl.POINTS);
         renderer.dibujar(piso2, false, renderer.gl.POINTS);
+
+        renderer.dibujar(centros, false, renderer.gl.POINTS)
+        renderer.dibujar(centrosPiso1, false, renderer.gl.POINTS)
+        renderer.dibujar(centrosPiso2, false, renderer.gl.POINTS)
+        
         decoracionTablero();
     }
 
@@ -184,6 +195,11 @@ function ejecutarJugada(nivel, fila, columna) {
 }
 
 
+
+//-----------------------------------------
+// Dibujado de piezas y tablero
+//-----------------------------------------
+
 function decoracionTablero() {
     const pilarIzquierdo = generadorLineas.calcularDDA(-0.74, -0.49, -0.74, 0.71);
     const pilarDerecho = generadorLineas.calcularDDA(0.85, -0.72, 0.85, 0.47);
@@ -197,3 +213,4 @@ function decoracionTablero() {
     renderer.dibujar(pilarTrasero1, false, renderer.gl.POINTS);
     renderer.dibujar(pilarTrasero2, false, renderer.gl.POINTS);
 }
+
