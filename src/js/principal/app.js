@@ -55,25 +55,35 @@ let lineaGanadora = []; // Guardará la línea que tachará las fichas ganadoras
 // Nuevo controlador abstraído de inputs (Mouse)
 const controladorInput = new GestorInput(canvas, casillas, {
     onClick: (celdaPulsada) => {
+        // Validación por si hacen click fuera o rápido en el limbo
+        if (!celdaPulsada) return; 
         ejecutarJugada(celdaPulsada.nivelIdx, celdaPulsada.filaIdx, celdaPulsada.columnaIdx, celdaPulsada.casilla);
     },
     onHover: (celdaApuntada) => {
+        
+        // 1. SI EL MOUSE SALIÓ DEL TABLERO (celdaApuntada es null)
+        // Limpiamos el resaltado y salimos inmediatamente para que no truene la app
+        if (!celdaApuntada) {
+            casillaResaltada = null;
+            return;
+        }
+        
+        // 2. Filtros normales de turnos e IA
         if (!juegoActivo || configuracionActual?.modo === 'demo' || (configuracionActual?.modo === 'pve' && simboloActual !== configuracionActual.humSimbolo)) {
             casillaResaltada = null;
             return;
         }
 
-        // --- NUEVA VALIDACIÓN ---
-        // Accedemos a la matriz interna del detector para ver si ya hay una ficha ahí (true/false o id de jugador)
-        // Nota: Asegúrate de comprobar cómo guarda tu clase 'detectorGanador.tablero' el estado libre (usualmente null, 0 o false)
+        // 3. VALIDACIÓN DE CASILLA OCUPADA
+        // Como ya filtramos el null arriba, aquí 'celdaApuntada' existe 100% seguro
         const casillaOcupada = detectorGanador.tablero[celdaApuntada.nivelIdx][celdaApuntada.filaIdx][celdaApuntada.columnaIdx];
         
         if (casillaOcupada !== null && casillaOcupada !== undefined && casillaOcupada !== false) {
-            casillaResaltada = null; // Si está ocupada, no activamos el relleno
+            casillaResaltada = null; // Si está ocupada, removemos el relleno amarillo
             return;
         }
-        // -------------------------
 
+        // 4. Si la casilla está libre y el juego está activo, se resalta
         casillaResaltada = celdaApuntada; 
     }
 });
@@ -180,13 +190,15 @@ function detenerPartida() {
 // ----------------------------------------
 // Lógica de Renderizado Principal
 // ----------------------------------------
+// ----------------------------------------
+// Lógica de Renderizado Principal (60 Hz Estable)
+// ----------------------------------------
 function renderizarEscena() {
     if (!renderer) return;
 
-    renderer.limpiar();
-
+    // Solo procedemos si el tablero y sus estructuras visuales existen
     if (tablero.n2) {
-        renderer.limpiar();
+        renderer.limpiar(); // Un solo limpiar al inicio del cuadro es suficiente
 
         // 1. Calculamos el relieve si hay una casilla seleccionada
         let figurasHighlight = [];
@@ -208,7 +220,7 @@ function renderizarEscena() {
         }
 
         // 4. Pintamos las FICHAS (X u O) al final para que queden encima de todo
-        renderer.setColor(1.0, 0.0, 0.0, 1.0); // Aseguramos el color de las fichas o el que uses
+        renderer.setColor(1.0, 0.0, 0.0, 1.0); 
         renderer.dibujar(figuras, true, renderer.gl.POINTS);
 
         // 5. La línea ganadora en la capa superior absoluta
@@ -216,9 +228,10 @@ function renderizarEscena() {
             renderer.setColor(0.0, 1.0, 1.0, 1.0); 
             renderer.dibujar(lineaGanadora, true, renderer.gl.POINTS);
         }
-    }
 
-    animacionId = requestAnimationFrame(renderizarEscena);
+        // Siguiente cuadro de animación coordinado solo si el juego está dibujando activamente
+        animacionId = requestAnimationFrame(renderizarEscena);
+    }
 }
 
 // ----------------------------------------
