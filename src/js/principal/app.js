@@ -52,18 +52,29 @@ let animacionId = null;
 let lineaGanadora = []; // Guardará la línea que tachará las fichas ganadoras
 
 // Nuevo controlador abstraído de inputs (Mouse)
+// Nuevo controlador abstraído de inputs (Mouse)
 const controladorInput = new GestorInput(canvas, casillas, {
     onClick: (celdaPulsada) => {
-        // Al hacer clic, pasamos las coordenadas de la celda pulsada a la lógica del juego
         ejecutarJugada(celdaPulsada.nivelIdx, celdaPulsada.filaIdx, celdaPulsada.columnaIdx, celdaPulsada.casilla);
     },
     onHover: (celdaApuntada) => {
-        // Bloquear resaltado visual si el juego está pausado, es un demo, o es el turno de la IA
         if (!juegoActivo || configuracionActual?.modo === 'demo' || (configuracionActual?.modo === 'pve' && simboloActual !== configuracionActual.humSimbolo)) {
             casillaResaltada = null;
             return;
         }
-        casillaResaltada = celdaApuntada; // Registra la celda activa para que el render la pinte brillante
+
+        // --- NUEVA VALIDACIÓN ---
+        // Accedemos a la matriz interna del detector para ver si ya hay una ficha ahí (true/false o id de jugador)
+        // Nota: Asegúrate de comprobar cómo guarda tu clase 'detectorGanador.tablero' el estado libre (usualmente null, 0 o false)
+        const casillaOcupada = detectorGanador.tablero[celdaApuntada.nivelIdx][celdaApuntada.filaIdx][celdaApuntada.columnaIdx];
+        
+        if (casillaOcupada !== null && casillaOcupada !== undefined && casillaOcupada !== false) {
+            casillaResaltada = null; // Si está ocupada, no activamos el relleno
+            return;
+        }
+        // -------------------------
+
+        casillaResaltada = celdaApuntada; 
     }
 });
 
@@ -166,6 +177,9 @@ function detenerPartida() {
  * Bucle infinito que repinta la pantalla simulando 60 fotogramas por segundo (RequestAnimationFrame).
  * Se encarga de ensamblar visualmente los diferentes componentes (Tablero, Figuras, Highlight, Victoria).
  */
+// ----------------------------------------
+// Lógica de Renderizado Principal
+// ----------------------------------------
 function renderizarEscena() {
     if (!renderer) return;
 
@@ -174,34 +188,36 @@ function renderizarEscena() {
     if (tablero.n2) {
         renderer.limpiar();
 
-        // Puntos del resaltado (hover)
+        // 1. Calculamos el relieve si hay una casilla seleccionada
         let figurasHighlight = [];
         if (casillaResaltada) {
-            figurasHighlight = graficador.crearResaltado(casillaResaltada.casilla, casillaResaltada.nivelIdx);
+            figurasHighlight = graficador.crearRelieveRelleno(casillaResaltada.casilla, casillaResaltada.nivelIdx);
         }
 
-        // Color defecto (Rojo sólido)
+        // 2. Pintamos primero la estructura del tablero (Rojo)
         renderer.setColor(1.0, 0.0, 0.0, 1.0);
         renderer.dibujar(tablero.n2, false, renderer.gl.POINTS);
         renderer.dibujar(tablero.n1, false, renderer.gl.POINTS);
         renderer.dibujar(tablero.n3, false, renderer.gl.POINTS);
-        renderer.dibujar(figuras, true, renderer.gl.POINTS);
         renderer.dibujar(decoracionEstatica, false, renderer.gl.POINTS);
 
-        // Color highlight (Amarillo claro parpadeante si es necesario, lo haremos un amarillo brillante)
+        // 3. Pintamos el relleno del HOVER (Amarillo) DEBAJO de las fichas
         if (figurasHighlight.length > 0) {
-            renderer.setColor(1.0, 1.0, 0.0, 1.0); // Amarillo brillante para el HOVER
+            renderer.setColor(1.0, 1.0, 0.0, 1.0); 
             renderer.dibujar(figurasHighlight, true, renderer.gl.POINTS);
         }
 
-        // Si hay línea ganadora, la dibujamos de otro color para que resalte
+        // 4. Pintamos las FICHAS (X u O) al final para que queden encima de todo
+        renderer.setColor(1.0, 0.0, 0.0, 1.0); // Aseguramos el color de las fichas o el que uses
+        renderer.dibujar(figuras, true, renderer.gl.POINTS);
+
+        // 5. La línea ganadora en la capa superior absoluta
         if (lineaGanadora && lineaGanadora.length > 0) {
-            renderer.setColor(0.0, 1.0, 1.0, 1.0); // Cyan brillante para el tacho de la victoria
+            renderer.setColor(0.0, 1.0, 1.0, 1.0); 
             renderer.dibujar(lineaGanadora, true, renderer.gl.POINTS);
         }
     }
 
-    // Continuar el bucle recursivo amarrándolo a la velocidad del monitor (60 FPS)
     animacionId = requestAnimationFrame(renderizarEscena);
 }
 
@@ -255,7 +271,7 @@ function ejecutarJugada(nivel, fila, columna, casilla) {
     // Intentar asentar el movimiento en el núcleo matricial (Verifica que no esté ocupada)
     if (detectorGanador.colocarFicha(nivel, fila, columna, simboloActual)) {
 
-        // Delegar al graficador la creación visual de las fichas ahorrando código spaghetti
+        // Delegar al graficador la creación visual de las fichas
         if (simboloActual) {
             figuras.push(...graficador.crearFichaX(casilla, nivel));
         } else {

@@ -1,5 +1,6 @@
 import LineaDDA from '../complementos/algoritmo_dda.js';
 import AlgoritmoElipse from '../complementos/algoritmos_bresenham.js';
+import Relleno from '../complementos/algoritmo_relleno.js';
 
 /**
  * Clase GraficadorEscena
@@ -15,6 +16,7 @@ export default class GraficadorEscena {
     constructor(constructorGrid) {
         this.generadorLineas = new LineaDDA();       // Instancia para dibujar primitivas de líneas rectas
         this.generadorElipse = new AlgoritmoElipse(); // Instancia para dibujar arcos y círculos (ficha O)
+        this.generadorRelleno = new Relleno();
         this.grid = constructorGrid; // Referencia central a la matriz de perspectiva
     }
 
@@ -47,9 +49,15 @@ export default class GraficadorEscena {
      * @param {number} nivel Índice de la altura Z
      * @returns {number[]} Array de vértices tridimensionales para el buffer de WebGL
      */
+    /**
+     * Genera la topología de una Ficha "O" RELLENA
+     * @param {Object} casilla Casilla plana donde irá insertada
+     * @param {number} nivel Índice de la altura Z
+     * @returns {number[]} Array de vértices tridimensionales para el buffer de WebGL
+     */
     crearFichaO(casilla, nivel) {
         const forma = [];
-        const padding = 0.15; // Margen dinámico que separa los bordes de la ficha respecto de la casilla
+        const padding = 0.15; 
         const xMinOriginal = casilla.x0 + padding;
         const xMaxOriginal = casilla.x1 - padding;
         const yMinOriginal = casilla.y0 + padding;
@@ -57,13 +65,28 @@ export default class GraficadorEscena {
 
         const x = (xMinOriginal + xMaxOriginal) / 2;
         const y = (yMinOriginal + yMaxOriginal) / 2;
-        const radio = Math.min(xMaxOriginal - xMinOriginal, yMaxOriginal - yMinOriginal) / 2;
+        const radioExterior = Math.min(xMaxOriginal - xMinOriginal, yMaxOriginal - yMinOriginal) / 2;
+        const radioInterior = radioExterior * 0.8;
 
-        const circulo1 = this.generadorElipse.calcularCirculo(x, y, radio);
-        const circulo2 = this.generadorElipse.calcularCirculo(x, y, radio * 0.8);
-
+        // 1. Opcional: Mantener los bordes definidos con Bresenham (le da mejor definición al contorno)
+        const circulo1 = this.generadorElipse.calcularCirculo(x, y, radioExterior);
+        const circulo2 = this.generadorElipse.calcularCirculo(x, y, radioInterior);
         forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(circulo1), nivel));
         forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(circulo2), nivel));
+
+        // 2. ¡LLAMAMOS AL NUEVO RELLENO CIRCULAR!
+        // Generamos toda la masa de líneas paralelas internas
+        const puntosRelleno = this.generadorRelleno.barridoCircular(
+            x, 
+            y, 
+            radioExterior, 
+            radioInterior, 
+            this.generadorLineas, 
+            0.008 // Un paso ligeramente más pequeño para que el círculo se vea suave y denso
+        );
+
+        // 3. Transformamos y proyectamos el relleno al espacio 3D
+        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(puntosRelleno), nivel));
 
         return forma;
     }
@@ -138,7 +161,7 @@ export default class GraficadorEscena {
 
             const dxPixel = pxFin - pxInicio;
             const dyPixel = pyFin - pyInicio;
-            const pasos = Math.max(Math.abs(dxPixel), Math.abs(dyPixel)) * 100;
+            const pasos = Math.max(Math.abs(dxPixel), Math.abs(dyPixel)) * 500;
             const xInc = dxPixel / pasos;
             const yInc = dyPixel / pasos;
 
@@ -150,6 +173,34 @@ export default class GraficadorEscena {
             }
         }
         return lineaGanadora;
+    }
+
+    /**
+     * Genera una casilla o relieve completamente RELLENO con líneas paralelas
+     * @param {Object} casilla Casilla plana de la matriz
+     * @param {number} nivel Índice de la altura Z
+     * @returns {number[]} Array de vértices tridimensionales para el Buffer
+     */
+    crearRelieveRelleno(casilla, nivel) {
+        const padding = 0.05; // Margen para el relieve dentro de la casilla
+        const xMin = casilla.x0 + padding;
+        const xMax = casilla.x1 - padding;
+        const yMin = casilla.y0 + padding;
+        const yMax = casilla.y1 - padding;
+
+        // 3. Llamamos al método de barrido de la clase Relleno
+        // El 'paso' de 0.01 define qué tan juntas estarán las líneas paralelas
+        const puntosPlanos = this.generadorRelleno.barridoLineal(
+            xMin, 
+            xMax, 
+            yMin, 
+            yMax, 
+            this.generadorLineas, 
+            0.01 
+        );
+
+        // 4. Transformamos las líneas paralelas al espacio 3D simulado de tu tablero
+        return this.grid.trasladarFiguraNivel(this.grid.transformarFigura(puntosPlanos), nivel);
     }
 
     /**

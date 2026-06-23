@@ -7,7 +7,7 @@
             "name": "Lanzar BrowserSync",
             "url": "http://localhost:3000/boundary/main.html",
             "webRoot": "${workspaceFolder}/src",
-            "runtimeExecutable": "/usr/bin/brave-browser-stable",
+            "runtimeExecutable": "/usr/bin/google-chrome",
             "preLaunchTask": "lanzarBrowserSync",
             "postDebugTask": "detenerBrowserSync"
         }

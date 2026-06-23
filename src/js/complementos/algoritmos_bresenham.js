@@ -70,7 +70,7 @@ export default class AlgoritmoElipse {
     }
 
     
-    calcularCirculo(xc, yc, r, octantes = [0, 1, 2, 3, 4, 5, 6, 7], resolucion = 100) {
+    calcularCirculo(xc, yc, r, octantes = [0, 1, 2, 3, 4, 5, 6, 7], resolucion = 500) {
         const puntos = [];
 
         // Validaciones iniciales

@@ -4,7 +4,7 @@ export default class LineaDDA {
 
         const dx = xFinal - xInicio;
         const dy = yFinal - yInicio;
-        const pasos = Math.max(Math.abs(dx), Math.abs(dy)) * 100;
+        const pasos = Math.max(Math.abs(dx), Math.abs(dy)) * 500;
 
         const xInc = dx / pasos;
         const yInc = dy / pasos;

@@ -4,7 +4,7 @@
         {
             "label": "lanzarBrowserSync",
             "type": "shell",
-            "command": "browser-sync start --server \"${workspaceFolder}/src\" --files \"${workspaceFolder}/src/**/*\" --no-open",
+            "command": "npx browser-sync start --server \"${workspaceFolder}/src\" --files \"${workspaceFolder}/src/**/*\" --no-open",
             "presentation": {
                 "reveal": "silent"
             },
