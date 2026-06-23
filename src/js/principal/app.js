@@ -55,35 +55,25 @@ let lineaGanadora = []; // Guardará la línea que tachará las fichas ganadoras
 // Nuevo controlador abstraído de inputs (Mouse)
 const controladorInput = new GestorInput(canvas, casillas, {
     onClick: (celdaPulsada) => {
-        // Validación por si hacen click fuera o rápido en el limbo
-        if (!celdaPulsada) return; 
         ejecutarJugada(celdaPulsada.nivelIdx, celdaPulsada.filaIdx, celdaPulsada.columnaIdx, celdaPulsada.casilla);
     },
     onHover: (celdaApuntada) => {
-        
-        // 1. SI EL MOUSE SALIÓ DEL TABLERO (celdaApuntada es null)
-        // Limpiamos el resaltado y salimos inmediatamente para que no truene la app
-        if (!celdaApuntada) {
-            casillaResaltada = null;
-            return;
-        }
-        
-        // 2. Filtros normales de turnos e IA
         if (!juegoActivo || configuracionActual?.modo === 'demo' || (configuracionActual?.modo === 'pve' && simboloActual !== configuracionActual.humSimbolo)) {
             casillaResaltada = null;
             return;
         }
 
-        // 3. VALIDACIÓN DE CASILLA OCUPADA
-        // Como ya filtramos el null arriba, aquí 'celdaApuntada' existe 100% seguro
+        // --- NUEVA VALIDACIÓN ---
+        // Accedemos a la matriz interna del detector para ver si ya hay una ficha ahí (true/false o id de jugador)
+        // Nota: Asegúrate de comprobar cómo guarda tu clase 'detectorGanador.tablero' el estado libre (usualmente null, 0 o false)
         const casillaOcupada = detectorGanador.tablero[celdaApuntada.nivelIdx][celdaApuntada.filaIdx][celdaApuntada.columnaIdx];
         
         if (casillaOcupada !== null && casillaOcupada !== undefined && casillaOcupada !== false) {
-            casillaResaltada = null; // Si está ocupada, removemos el relleno amarillo
+            casillaResaltada = null; // Si está ocupada, no activamos el relleno
             return;
         }
+        // -------------------------
 
-        // 4. Si la casilla está libre y el juego está activo, se resalta
         casillaResaltada = celdaApuntada; 
     }
 });
