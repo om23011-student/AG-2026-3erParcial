@@ -41,8 +41,8 @@ export default class ConstruirGrid {
                 const y1 = y0 + paso;
 
                 const casillaN2 = this.transformarArray([x0, y0, 0, x1, y1, 0]);
-                const casillasN1 = this.transformacion.translacion(casillaN2, 0, -0.6, 0);
-                const casillasN3 = this.transformacion.translacion(casillaN2, 0, 0.6, 0);
+                const casillasN1 = this.trasladarFiguraNivel(casillaN2, 0);
+                const casillasN3 = this.trasladarFiguraNivel(casillaN2, 2);
                 
                 const casillaData = { x0, x1, y0, y1 }; // Guardar coordenadas originales
 
@@ -89,8 +89,8 @@ export default class ConstruirGrid {
             }
         }
         const tableroNivel2 = this.transformarArray(lineas);
-        const tableroNivel1 = this.transformacion.translacion(tableroNivel2, 0, -0.6, 0);
-        const tableroNivel3 = this.transformacion.translacion(tableroNivel2, 0, 0.6, 0);
+        const tableroNivel1 = this.trasladarFiguraNivel(tableroNivel2, 0);
+        const tableroNivel3 = this.trasladarFiguraNivel(tableroNivel2, 2);
         const tablero = {
             n1: tableroNivel1,
             n2: tableroNivel2,
@@ -121,16 +121,6 @@ export default class ConstruirGrid {
     }
 
     /**
-     * Envuelve transformarArray para uso nominal en polígonos
-     * @param {number[]} array Formas de fichas (cruces o círculos)
-     * @returns {number[]} Polígono rotado
-     */
-    transformarFigura(array) {
-        let resultado = this.transformarArray(array);
-        return resultado;
-    }
-
-    /**
      * Recibe una figura matemáticamente correcta pero "neutra" y la eleva o la hunde en el eje Y
      * simulando colocar la ficha en el fondo, en el medio o en la cima del cristal.
      *
@@ -145,10 +135,4 @@ export default class ConstruirGrid {
         return array;
     }
 
-    // (Legado) traslada una figura estáticamente
-    trasladarFigura(array, altura= 1) {
-        // const resultado = this.transformacion.translacion(array, 0, -0.6, 0);
-        const resultado = this.transformacion.translacion(array, 0, 0.6, 0);
-        return resultado;
-    }
 }

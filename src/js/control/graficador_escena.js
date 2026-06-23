@@ -37,8 +37,8 @@ export default class GraficadorEscena {
         const linea1 = this.generadorLineas.calcularDDA(xMinOriginal, yMinOriginal, xMaxOriginal, yMaxOriginal);
         const linea2 = this.generadorLineas.calcularDDA(xMaxOriginal, yMinOriginal, xMinOriginal, yMaxOriginal);
 
-        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(linea1), nivel));
-        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(linea2), nivel));
+        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarArray(linea1), nivel));
+        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarArray(linea2), nivel));
 
         return forma;
     }
@@ -65,14 +65,13 @@ export default class GraficadorEscena {
 
         const x = (xMinOriginal + xMaxOriginal) / 2;
         const y = (yMinOriginal + yMaxOriginal) / 2;
-        const radioExterior = Math.min(xMaxOriginal - xMinOriginal, yMaxOriginal - yMinOriginal) / 2;
-        const radioInterior = radioExterior * 0.8;
+        const radio = Math.min(xMaxOriginal - xMinOriginal, yMaxOriginal - yMinOriginal) / 2;
 
-        // 1. Opcional: Mantener los bordes definidos con Bresenham (le da mejor definición al contorno)
-        const circulo1 = this.generadorElipse.calcularCirculo(x, y, radioExterior);
-        const circulo2 = this.generadorElipse.calcularCirculo(x, y, radioInterior);
-        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(circulo1), nivel));
-        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarFigura(circulo2), nivel));
+        const circulo1 = this.generadorElipse.circuloBresenham(x, y, radio);
+        const circulo2 = this.generadorElipse.circuloBresenham(x, y, radio * 0.8);
+
+        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarArray(circulo1), nivel));
+        forma.push(...this.grid.trasladarFiguraNivel(this.grid.transformarArray(circulo2), nivel));
 
         // 2. ¡LLAMAMOS AL NUEVO RELLENO CIRCULAR!
         // Generamos toda la masa de líneas paralelas internas
@@ -110,7 +109,7 @@ export default class GraficadorEscena {
         const base3 = this.generadorLineas.calcularDDA(x1 - hp, y1 - hp, x0 + hp, y1 - hp);
         const base4 = this.generadorLineas.calcularDDA(x0 + hp, y1 - hp, x0 + hp, y0 + hp);
 
-        const procesar = (linea) => this.grid.trasladarFiguraNivel(this.grid.transformarFigura(linea), nivel);
+        const procesar = (linea) => this.grid.trasladarFiguraNivel(this.grid.transformarArray(linea), nivel);
 
         forma.push(...procesar(base1));
         forma.push(...procesar(base2));
@@ -149,12 +148,12 @@ export default class GraficadorEscena {
 
         if (dz === 0) {
             // Si la victoria ocurrió netamente en la misma altura, se calcula 2D y sube.
-            let trazoTranformado = this.grid.transformarFigura(linea);
+            let trazoTranformado = this.grid.transformarArray(linea);
             lineaGanadora.push(...this.grid.trasladarFiguraNivel(trazoTranformado, coordenadaInicio.nivel));
         } else {
             // Cuando la victoria rompe el factor Z (Caída), se tiran rayos DDA desde una perspectiva netamente 3D preprocesada
-            let pc1 = this.grid.trasladarFiguraNivel(this.grid.transformarFigura([xInicio, yInicio, 0.0]), coordenadaInicio.nivel);
-            let pc3 = this.grid.trasladarFiguraNivel(this.grid.transformarFigura([xFin, yFin, 0.0]), nivelFin);
+            let pc1 = this.grid.trasladarFiguraNivel(this.grid.transformarArray([xInicio, yInicio, 0.0]), coordenadaInicio.nivel);
+            let pc3 = this.grid.trasladarFiguraNivel(this.grid.transformarArray([xFin, yFin, 0.0]), nivelFin);
 
             const pxInicio = pc1[0], pyInicio = pc1[1];
             const pxFin = pc3[0], pyFin = pc3[1];

@@ -1,5 +1,6 @@
-// algoritmo_elipse.js
-export default class AlgoritmoElipse {
+import LineaDDA from "../complementos/algoritmo_dda.js";
+
+export default class AlgoritmoElipse extends LineaDDA {
     
     // --- Algoritmo original para la Elipse ---
     calcularElipse(xc, yc, rx, ry, resolucion = 100) {
@@ -123,6 +124,25 @@ export default class AlgoritmoElipse {
             }
         }
 
+        return puntos;
+    }
+
+    circuloBresenham(xc, yc, r, resolucion = 20) { 
+        const angulo = resolucion * Math.PI / 180;
+        const puntos = [];
+        const factor = resolucion / 180;
+        const pasos = Math.ceil(180 / resolucion);
+        
+        let xAnt = xc + r * Math.cos(0);
+        let yAnt = yc + r * Math.sin(0);
+
+        for (let ang = 0; ang < ((pasos * 2)/factor + factor) * Math.PI; ang += angulo) {
+            const x = xc + r * Math.cos(ang);
+            const y = yc + r * Math.sin(ang);
+            puntos.push(...this.calcularDDA(xAnt, yAnt, x, y));
+            xAnt = x;
+            yAnt = y;
+        }
         return puntos;
     }
 
