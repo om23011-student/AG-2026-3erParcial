@@ -6,42 +6,24 @@ import GestorInterfaz from '../control/gestor_interfaz.js';
 
 // 1. Importamos la clase de dibujo
 import LineaDDA from '../complementos/algoritmo_dda.js';
-import transformaciones from '../complementos/algoritmo_transformacion.js';
 import ConstruirGrid from '../mecanismos/construir_grid.js';
+import AlgoritmoElipse from '../complementos/algoritmos_bresenham.js';
 
 // 2. Instanciamos el generador
 const generadorLineas = new LineaDDA();
-const transformacion = new transformaciones();
 const constructorGrid = new ConstruirGrid();
+const generadorElipse = new AlgoritmoElipse();
 const { tablero, casillas } = constructorGrid.obtenerTablero(); // Obtenemos el tablero de 3x3
-const piso1 = transformacion.translacion(tablero, 0, -0.6, 0); // Movemos el tablero a la izquierda para centrarlo
-const piso2 = transformacion.translacion(tablero, 0, 0.6, 0); // Movemos el tablero hacia arriba para el segundo piso
-const casillasNivel1 = transformacion.translacion(casillas, 0, -0.6, 0);
-const casillasNivel2 = transformacion.translacion(casillas, 0, 0.6, 0);
+const figuras = [];
 
-function detectarCasilla (x, y) {
-    casillas.forEach((fila, filaIdx) => {
-        fila.forEach((casilla, columnaIdx) => {
-            if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
-                console.log("llego base");
-                ejecutarJugada(2, filaIdx, columnaIdx);
-            }
-        });
-    });
-    casillasNivel1.forEach((fila, filaIdx) => {
-        fila.forEach((casilla, columnaIdx) => {
-            if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
-                console.log("llego alto");
-                ejecutarJugada(1, filaIdx, columnaIdx);
-            }
-        });
-    });
-    casillasNivel2.forEach((fila, filaIdx) => {
-        fila.forEach((casilla, columnaIdx) => {
-            if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
-                console.log("llego bajo");
-                ejecutarJugada(3, filaIdx, columnaIdx);
-            }
+function detectarCasilla (x, y) {    
+    Object.values(casillas).forEach((nivel, nivelIdx) => {
+        nivel.forEach((fila, filaIdx) => {
+            fila.forEach((casilla, columnaIdx) => {
+                if (x >= casilla.xMin && x <= casilla.xMax && y >= casilla.yMin && y <= casilla.yMax) {
+                    ejecutarJugada(nivelIdx, filaIdx, columnaIdx, casilla);
+                }
+            });
         });
     });
 }
@@ -110,7 +92,7 @@ function arrancarPartida(config) {
     interfaz.limpiarInterfaz();
     interfaz.configurarNombres(config);
     interfaz.actualizarTurno(simboloActual);
-
+    figuras.length = 0; // Limpiamos cualquier figura previa
     // Arrancar WebGL
     if (!renderer) {
         initWebGL();
@@ -147,6 +129,7 @@ function detenerPartida() {
     
     // Limpiar el canvas si existe el renderer
     if (renderer) {
+        figuras.length = 0; // Limpiamos cualquier figura previa
         renderer.limpiar();
     }
 }
@@ -161,11 +144,12 @@ function renderizarEscena() {
 
     // 5. Dibujamos la línea si los puntos existen en cada ciclo
     // CORRECCIÓN: Validación con el nombre correcto
-    if (tablero) { 
+    if (tablero.n2) { 
         renderer.limpiar();
-        renderer.dibujar(tablero, false, renderer.gl.POINTS);
-        renderer.dibujar(piso1, false, renderer.gl.POINTS);
-        renderer.dibujar(piso2, false, renderer.gl.POINTS);
+        renderer.dibujar(tablero.n2, false, renderer.gl.POINTS);
+        renderer.dibujar(tablero.n1, false, renderer.gl.POINTS);
+        renderer.dibujar(tablero.n3, false, renderer.gl.POINTS);
+        renderer.dibujar(figuras, true, renderer.gl.POINTS);
         decoracionTablero();
     }
 
@@ -183,7 +167,12 @@ function turnoIA() {
 
     setTimeout(() => {
         const movimiento = motorIA.obtenerMejorMovimiento(detectorGanador.tablero);
-        ejecutarJugada(movimiento.nivel, movimiento.fila, movimiento.columna);
+
+        Object.values(casillas).forEach((nivel, nivelIdx) => {
+            if (nivelIdx === movimiento.nivel) {
+                ejecutarJugada(movimiento.nivel, movimiento.fila, movimiento.columna, nivel[movimiento.fila][movimiento.columna]);
+            }
+        });
 
         if (configuracionActual.modo === 'demo' && juegoActivo) {
             turnoIA();
@@ -195,14 +184,49 @@ function cicloDemo() {
     turnoIA();
 }
 
-function ejecutarJugada(nivel, fila, columna) {
+function agregarZ0(vertices2D) {
+    const vertices3D = [];
+    console.log(vertices2D);
+    
+    for (let i = 0; i < vertices2D.length; i += 2) {
+        vertices3D.push(
+            vertices2D[i],     // x
+            vertices2D[i + 1], // y
+            0                  // z
+        );
+        console.log(vertices3D);
+        
+    }
+
+    return vertices3D;
+}
+
+function ejecutarJugada(nivel, fila, columna, casilla) {
     if (!juegoActivo) return;
 
     // Intentar asentar el movimiento en el núcleo duro de evaluación
     if (detectorGanador.colocarFicha(nivel, fila, columna, simboloActual)) {
         // TODO: ACTUALIZAR RENDERIZADO AQUÍ CON WEBGL
-        console.log("ya va qudando");
-        
+        if (simboloActual) {
+            const linea1 = agregarZ0( generadorLineas.calcularDDA(casilla.xMin, casilla.yMin, casilla.xMax, casilla.yMax) )
+            
+            figuras.push(...constructorGrid.transformarFigura((linea1)));
+            const linea2 = generadorLineas.calcularDDA(casilla.xMax, casilla.yMin, casilla.xMin, casilla.yMax);
+            figuras.push(...constructorGrid.transformarFigura((linea2)));
+        } else {
+            const x = (casilla.xMin + casilla.xMax) / 2;
+            const y = (casilla.yMin + casilla.yMax) / 2;
+            const radio = Math.min(casilla.xMax - casilla.xMin, casilla.yMax - casilla.yMin) / 2;
+            const circulo1 = generadorElipse.calcularCirculo(x, y, radio);
+            figuras.push(...((circulo1)));
+            const circulo2 = generadorElipse.calcularCirculo(x, y, radio / 2);
+            figuras.push(...((circulo2)));
+        }
+        // Cambiar la batuta visual y lógica al otro jugador
+        simboloActual = !simboloActual;
+        interfaz.actualizarTurno(simboloActual);
+    }
+
         // Verificar si la partida terminó tras la jugada
         const resultado = detectorGanador.verificarGanador();
 
@@ -210,9 +234,6 @@ function ejecutarJugada(nivel, fila, columna) {
             juegoActivo = false;
             interfaz.mostrarResultado(resultado, configuracionActual);
         } else {
-            // Cambiar la batuta visual y lógica al otro jugador
-            simboloActual = !simboloActual;
-            interfaz.actualizarTurno(simboloActual);
 
             // Si el siguiente en tirar es la IA
             if (configuracionActual.modo === 'pve' && simboloActual !== configuracionActual.humSimbolo) {
@@ -220,7 +241,6 @@ function ejecutarJugada(nivel, fila, columna) {
             }
         }
     }
-}
 
 function decoracionTablero() {
     const decoracion = [];
