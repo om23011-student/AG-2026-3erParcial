@@ -31,25 +31,30 @@ export default class ConstruirGrid {
                 const casillasN1 = this.transformacion.translacion(casillaN2, 0, -0.6, 0);
                 const casillasN3 = this.transformacion.translacion(casillaN2, 0, 0.6, 0);
                 
+                const casillaData = { x0, x1, y0, y1 }; // Guardar coordenadas originales
+
                 casillas.nivel1[fila].push({
                     xMin: Math.min(casillasN1[0], casillasN1[3]),
                     xMax: Math.max(casillasN1[0], casillasN1[3]),
                     yMin: Math.min(casillasN1[1], casillasN1[4]),
-                    yMax: Math.max(casillasN1[1], casillasN1[4])
+                    yMax: Math.max(casillasN1[1], casillasN1[4]),
+                    ...casillaData
                 });
 
                 casillas.nivel2[fila].push({
                     xMin: Math.min(casillaN2[0], casillaN2[3]),
                     xMax: Math.max(casillaN2[0], casillaN2[3]),
                     yMin: Math.min(casillaN2[1], casillaN2[4]),
-                    yMax: Math.max(casillaN2[1], casillaN2[4])
+                    yMax: Math.max(casillaN2[1], casillaN2[4]),
+                    ...casillaData
                 });
 
                 casillas.nivel3[fila].push({
                     xMin: Math.min(casillasN3[0], casillasN3[3]),
                     xMax: Math.max(casillasN3[0], casillasN3[3]),
                     yMin: Math.min(casillasN3[1], casillasN3[4]),
-                    yMax: Math.max(casillasN3[1], casillasN3[4])
+                    yMax: Math.max(casillasN3[1], casillasN3[4]),
+                    ...casillaData
                 });
 
                 lineas.push(
@@ -96,9 +101,15 @@ export default class ConstruirGrid {
     }
 
     transformarFigura(array) {
-        let resultado = this.transformacion.rotacion(array,  (Math.PI / 180));
-        // resultado = this.transformacion.escalado(resultado, 0.6);
+        let resultado = this.transformarArray(array);
         return resultado;
+    }
+
+    trasladarFiguraNivel(array, nivel) {
+        if (nivel === 0) return this.transformacion.translacion(array, 0, -0.6, 0); // nivel 1
+        if (nivel === 1) return array; // nivel 2
+        if (nivel === 2) return this.transformacion.translacion(array, 0, 0.6, 0); // nivel 3
+        return array;
     }
 
     trasladarFigura(array, altura= 1) {

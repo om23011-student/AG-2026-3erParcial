@@ -184,43 +184,46 @@ function cicloDemo() {
     turnoIA();
 }
 
-function agregarZ0(vertices2D) {
-    const vertices3D = [];
-    console.log(vertices2D);
-    
-    for (let i = 0; i < vertices2D.length; i += 2) {
-        vertices3D.push(
-            vertices2D[i],     // x
-            vertices2D[i + 1], // y
-            0                  // z
-        );
-        console.log(vertices3D);
-        
-    }
-
-    return vertices3D;
-}
-
 function ejecutarJugada(nivel, fila, columna, casilla) {
     if (!juegoActivo) return;
 
     // Intentar asentar el movimiento en el núcleo duro de evaluación
     if (detectorGanador.colocarFicha(nivel, fila, columna, simboloActual)) {
         // TODO: ACTUALIZAR RENDERIZADO AQUÍ CON WEBGL
+        // Reducimos las coordenadas originales para aplicar un pequeño margen (padding) a las fichas
+        const padding = 0.1;
+        const xMinOriginal = casilla.x0 + padding;
+        const xMaxOriginal = casilla.x1 - padding;
+        const yMinOriginal = casilla.y0 + padding;
+        const yMaxOriginal = casilla.y1 - padding;
+
         if (simboloActual) {
-            const linea1 = agregarZ0( generadorLineas.calcularDDA(casilla.xMin, casilla.yMin, casilla.xMax, casilla.yMax) )
-            
-            figuras.push(...constructorGrid.transformarFigura((linea1)));
-            const linea2 = generadorLineas.calcularDDA(casilla.xMax, casilla.yMin, casilla.xMin, casilla.yMax);
-            figuras.push(...constructorGrid.transformarFigura((linea2)));
+            // Dibujar X usando coordenadas no transformadas
+            const linea1 = generadorLineas.calcularDDA(xMinOriginal, yMinOriginal, xMaxOriginal, yMaxOriginal);
+            const linea2 = generadorLineas.calcularDDA(xMaxOriginal, yMinOriginal, xMinOriginal, yMaxOriginal);
+
+            let forma1 = constructorGrid.transformarFigura(linea1);
+            forma1 = constructorGrid.trasladarFiguraNivel(forma1, nivel);
+            figuras.push(...forma1);
+
+            let forma2 = constructorGrid.transformarFigura(linea2);
+            forma2 = constructorGrid.trasladarFiguraNivel(forma2, nivel);
+            figuras.push(...forma2);
         } else {
-            const x = (casilla.xMin + casilla.xMax) / 2;
-            const y = (casilla.yMin + casilla.yMax) / 2;
-            const radio = Math.min(casilla.xMax - casilla.xMin, casilla.yMax - casilla.yMin) / 2;
+            // Dibujar O usando coordenadas no transformadas
+            const x = (xMinOriginal + xMaxOriginal) / 2;
+            const y = (yMinOriginal + yMaxOriginal) / 2;
+            const radio = Math.min(xMaxOriginal - xMinOriginal, yMaxOriginal - yMinOriginal) / 2;
+
             const circulo1 = generadorElipse.calcularCirculo(x, y, radio);
-            figuras.push(...((circulo1)));
-            const circulo2 = generadorElipse.calcularCirculo(x, y, radio / 2);
-            figuras.push(...((circulo2)));
+            let formaO1 = constructorGrid.transformarFigura(circulo1);
+            formaO1 = constructorGrid.trasladarFiguraNivel(formaO1, nivel);
+            figuras.push(...formaO1);
+
+            const circulo2 = generadorElipse.calcularCirculo(x, y, radio * 0.8);
+            let formaO2 = constructorGrid.transformarFigura(circulo2);
+            formaO2 = constructorGrid.trasladarFiguraNivel(formaO2, nivel);
+            figuras.push(...formaO2);
         }
         // Cambiar la batuta visual y lógica al otro jugador
         simboloActual = !simboloActual;
