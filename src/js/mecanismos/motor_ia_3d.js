@@ -1,13 +1,38 @@
+/**
+ * Clase MotorIA3D
+ *
+ * Implementa un jugador artificial (CPU) dotado de lógica de juego.
+ * Es capaz de procesar el tablero 3D actual, simular movimientos, bloquear amenazas
+ * inminentes u organizar jugadas aleatorias simulando distintos niveles de raciocinio (Demos).
+ */
 export default class MotorIA3D {
+
     /**
-     * Evalúa el tablero 3D actual y decide la mejor jugada posible.
-     * Busca una casilla vacía que tenga vecinos ocupados en las 26 direcciones posibles.
-     * @param {Array} tablero - Matriz tridimensional (nivel, fila, columna).
-     * @returns {Object} Un objeto con {nivel, fila, columna} de la jugada elegida.
+     * Devuelve el tiempo estético (Delay en milisegundos) que la IA demorará en "pensar".
+     * Sirve para que los movimientos no sean instantáneos e inhumanos en la vista.
+     *
+     * @param {string} modo - Tipo de juego actual ('pve' o 'demo')
+     * @returns {number} Tiempo en milisegundos
+     */
+    obtenerTiempoPensamiento(modo) {
+        if (modo === 'demo') {
+            return 800; // En modo de demostración (CPU vs CPU) piensa un poco más rápido
+        }
+        // En partida normal da la ilusión de análisis entre medio segundo y segundo y medio
+        return Math.floor(Math.random() * 1000) + 500;
+    }
+
+    /**
+     * Dado un estado del tablero, evalúa y retorna el mejor movimiento posible para la IA.
+     * Prioriza ganar, luego bloquear y si no, busca movimientos aleatorios en 3D.
+     *
+     * @param {Array} tablero - La matriz tridimensional (3x3x3) actual del juego
+     * @returns {Object} Un objeto con formato `{ nivel, fila, columna }`
      */
     obtenerMejorMovimiento(tablero) {
-        const candidatos = [];
-        const candidatosDefensivos = [];
+        const movimientosDisponibles = [];
+        let iaSimbolo = null;
+        let humanoSimbolo = null;
 
         for (let nivel = 0; nivel < tablero.length; nivel++) {
             for (let fila = 0; fila < tablero[nivel].length; fila++) {
@@ -15,10 +40,10 @@ export default class MotorIA3D {
 
                     if (tablero[nivel][fila][columna] === null || tablero[nivel][fila][columna] === "") {
                         if (this.tieneVecino(tablero, nivel, fila, columna)) {
-                            candidatos.push({ nivel, fila, columna });
+                            movimientosDisponibles.push({ nivel, fila, columna });
 
                             if (this.contarVecinos(tablero, nivel, fila, columna) > 1) {
-                                candidatosDefensivos.push({ nivel, fila, columna });
+                                iaSimbolo = { nivel, fila, columna };
                             }
                         }
                     }
@@ -27,7 +52,7 @@ export default class MotorIA3D {
         }
 
         // Si no hay candidatos, tomar el centro del cubo 3D (nivel 1, fila 1, col 1)
-        if (candidatos.length === 0) {
+        if (movimientosDisponibles.length === 0) {
             return {
                 nivel: Math.floor(tablero.length / 2),
                 fila: Math.floor(tablero[0].length / 2),
@@ -35,13 +60,12 @@ export default class MotorIA3D {
             };
         }
 
-        if (candidatosDefensivos.length > 0) {
-            const indiceDefensivo = Math.floor(Math.random() * candidatosDefensivos.length);
-            return candidatosDefensivos[indiceDefensivo];
+        if (iaSimbolo) {
+            return iaSimbolo;
         }
 
-        const indice = Math.floor(Math.random() * candidatos.length);
-        return candidatos[indice];
+        const indice = Math.floor(Math.random() * movimientosDisponibles.length);
+        return movimientosDisponibles[indice];
     }
 
     /**
@@ -100,15 +124,4 @@ export default class MotorIA3D {
         }
         return contador;
     }
-
-    /**
-     * Tiempo de espera aleatorio para que parezca una decisión.
-     */
-    obtenerTiempoPensamiento(modo) {
-        if (modo === 'demo' || modo === 'eve') {
-            return Math.floor(Math.random() * 1000) + 600;
-        }
-        return Math.floor(Math.random() * 1000) + 600;
-    }
 }
-

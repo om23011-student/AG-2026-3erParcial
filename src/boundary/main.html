@@ -203,6 +203,35 @@
             transition: all 1s ease-in-out;
         }
 
+        /* --- MODAL FIN DEL JUEGO LATERAL --- */
+        #game-over-modal {
+            /* Sobrescribimos el layout de pantalla completa */
+            width: auto;
+            height: auto;
+            top: 50%;
+            left: auto;
+            right: 50px;
+            transform: translateY(-50%);
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            /* Permitir hacer clics alrededor */
+            pointer-events: none;
+        }
+
+        #game-over-modal .modal-content {
+            /* Reactivar clics dentro de este cuadro */
+            pointer-events: auto;
+            padding: 2.5rem 3.5rem;
+            animation: slideInRight 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: rgba(20, 30, 60, 0.5); /* Ligeramente más opaco para legibilidad */
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px) scale(0.9); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
         /* Contenedor del juego */
         #game-container {
             display: none;

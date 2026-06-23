@@ -1,12 +1,25 @@
 import LineaDDA from "../complementos/algoritmo_dda.js";
 import transformaciones from "../complementos/algoritmo_transformacion.js";
 
+/**
+ * Clase ConstruirGrid
+ *
+ * Se encarga de la generación estructural del tablero 3D.
+ * Fabrica el modelo matemático matriz por matriz y somete las líneas base a las transformaciones
+ * de rotación, cizalladura y perspectiva para conseguir un objeto estereoscópico.
+ */
 export default class ConstruirGrid {
     constructor() {
-        this.generadorLineas = new LineaDDA();
-        this.transformacion = new transformaciones();
+        this.generadorLineas = new LineaDDA(); // Trazos básicos en planos 2D
+        this.transformacion = new transformaciones(); // Cúmulo de transformaciones matriciales
     }
 
+    /**
+     * Construye un cubo de 3x3x3 generando las líneas maestras de las bases
+     * y calculando los hitboxes matemáticos (min y max) interactivos en pantalla.
+     *
+     * @returns {Object} Un objeto con el dibujo vectorial del {tablero} y los bounds virtuales {casillas}
+     */
     obtenerTablero() {
         const lineas = [];
         const casillas = {
@@ -89,6 +102,13 @@ export default class ConstruirGrid {
         };
     }
 
+    /**
+     * Somete cualquier conjunto de vértices crudos a la deformación visual planeada:
+     * Traslación espacial 60°, Escalado 0.6, Cizalladura -0.3, Punto de fuga 0.2, Rotación X 70°
+     *
+     * @param {number[]} array Vertices planos base `[X, Y, Z...]`
+     * @returns {number[]} Vector deformado simulando isometría/perspectiva 3D
+     */
     transformarArray(array) {
         let resultado = this.transformacion.rotacion(array, 60);
         resultado = this.transformacion.escalado(resultado, 0.6);
@@ -100,18 +120,32 @@ export default class ConstruirGrid {
         return resultado;
     }
 
+    /**
+     * Envuelve transformarArray para uso nominal en polígonos
+     * @param {number[]} array Formas de fichas (cruces o círculos)
+     * @returns {number[]} Polígono rotado
+     */
     transformarFigura(array) {
         let resultado = this.transformarArray(array);
         return resultado;
     }
 
+    /**
+     * Recibe una figura matemáticamente correcta pero "neutra" y la eleva o la hunde en el eje Y
+     * simulando colocar la ficha en el fondo, en el medio o en la cima del cristal.
+     *
+     * @param {number[]} array Coordenadas de las fichas
+     * @param {number} nivel Enum de altura del tablero (0 = Base, 1 = Medio, 2 = Cima)
+     * @returns {number[]} Fichas flotando a la altura elegida
+     */
     trasladarFiguraNivel(array, nivel) {
-        if (nivel === 0) return this.transformacion.translacion(array, 0, -0.6, 0); // nivel 1
-        if (nivel === 1) return array; // nivel 2
-        if (nivel === 2) return this.transformacion.translacion(array, 0, 0.6, 0); // nivel 3
+        if (nivel === 0) return this.transformacion.translacion(array, 0, -0.6, 0); // Desciende para formar el nivel 1
+        if (nivel === 1) return array; // Se queda inalterable para formar el nivel 2 (el del medio)
+        if (nivel === 2) return this.transformacion.translacion(array, 0, 0.6, 0); // Asciende para formar el nivel 3
         return array;
     }
 
+    // (Legado) traslada una figura estáticamente
     trasladarFigura(array, altura= 1) {
         // const resultado = this.transformacion.translacion(array, 0, -0.6, 0);
         const resultado = this.transformacion.translacion(array, 0, 0.6, 0);

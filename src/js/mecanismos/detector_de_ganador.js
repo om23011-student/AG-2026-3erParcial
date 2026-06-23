@@ -1,3 +1,10 @@
+/**
+ * Clase TresEnRaya3D
+ *
+ * Implementa el gestor de memoria lógica y el algoritmo de arbitraje del juego.
+ * Gestiona el cubo de 3x3x3, almacena las fichas X y O e interroga las combinaciones
+ * matemáticas para detectar empates o posibles líneas ganadoras (en 2D o profundidades 3D).
+ */
 export default class TresEnRaya3D {
 
     constructor() {
@@ -5,9 +12,9 @@ export default class TresEnRaya3D {
         this.iniciarJuego(); // Inicializa la matriz 3x3x3
     }
 
-    // ========================================
-    // INICIAR JUEGO (Crear el cubo 3x3x3)
-    // ========================================
+    /**
+     * Resetea el cubo lógico y lo llena de posiciones vacías (null).
+     */
     iniciarJuego() {
         this.tablero = [];
         
@@ -22,9 +29,14 @@ export default class TresEnRaya3D {
         }
     }
 
-    // ========================================
-    // COLOCAR FICHA
-    // ========================================
+    /**
+     * Ubica una ficha en memoria validando que el lugar exista y esté libre.
+     * @param {number} nivel Eje Z (Altura)
+     * @param {number} fila Eje Y (Plano Cartesiano)
+     * @param {number} columna Eje X (Plano Cartesiano)
+     * @param {boolean} valor Símbolo del jugador (true para X, false para O)
+     * @returns {boolean} Retorna verdadero si se coloco exitosamente
+     */
     colocarFicha(nivel, fila, columna, valor) {
 
         // Validar límites fijos (0 a 2 para Z, Y, X)
@@ -55,9 +67,12 @@ export default class TresEnRaya3D {
         return true;
     }
 
-    // ========================================
-    // VERIFICAR GANADOR EN 3D
-    // ========================================
+    /**
+     * Escanea todo el cubo 3x3x3 intentando encontrar líneas de tres fichas iguales
+     * en cualquiera de las direcciones de los 13 ejes posibles del espacio.
+     *
+     * @returns {Object} Diccionario con el estado ({estado: 'ganador'|'empate'|'continua'})
+     */
     verificarGanador() {
 
         // Las 13 direcciones únicas en un espacio 3D [dz, dx, dy]
